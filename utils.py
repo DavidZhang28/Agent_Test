@@ -128,24 +128,15 @@ def display_state(session_service, app_name, user_id, session_id, label="Current
 
 
 async def process_agent_response(event):
-    """Process and display streaming agent responses."""
-    print(f"Event ID: {event.id}, Author: {event.author}")
-
-    if event.content and event.content.parts:
-        for part in event.content.parts:
-            if hasattr(part, "text") and part.text and not part.text.isspace():
-                print(f"  Text: '{part.text.strip()}'")
-
+    """Process agent responses (no printing, just return the text)."""
     final_response = None
     if event.is_final_response() and event.content and event.content.parts:
         final_part = event.content.parts[0]
         if hasattr(final_part, "text"):
             final_response = final_part.text.strip()
-            print("\n═══════════════════════════════════════════════════════════════")
-            print(f"🧠 FINAL AGENT RESPONSE:\n{final_response}")
-            print("═══════════════════════════════════════════════════════════════\n")
     return final_response
 
+    
 
 async def call_agent_async(runner, user_id, session_id, query):
     """Run the coordinator agent asynchronously with user query input."""
@@ -163,6 +154,7 @@ async def call_agent_async(runner, user_id, session_id, query):
 
     final_response_text = None
     agent_name = None
+    all_responses = []  # Collect all responses
 
     try:
         async for event in runner.run_async(
@@ -172,11 +164,27 @@ async def call_agent_async(runner, user_id, session_id, query):
         ):
             if event.author:
                 agent_name = event.author
-            response = await process_agent_response(event)
-            if response:
-                final_response_text = response
+            
+            # Check if this is a final response
+            if event.is_final_response() and event.content and event.content.parts:
+                final_part = event.content.parts[0]
+                if hasattr(final_part, "text"):
+                    response_text = final_part.text.strip()
+                    all_responses.append({
+                        "agent": agent_name,
+                        "text": response_text
+                    })
+                    final_response_text = response_text  # Keep updating to get the last one
+                    
     except Exception as e:
         print(f"❌ ERROR during agent run: {e}")
+
+    # Only print the LAST final response (from ghost_synthesizer)
+    if final_response_text:
+        print("\n═══════════════════════════════════════════════════════════════")
+        print(f"🧠 FINAL RESPONSE FROM {agent_name}:")
+        print(final_response_text)
+        print("═══════════════════════════════════════════════════════════════\n")
 
     # Add response to session state
     if final_response_text and agent_name:

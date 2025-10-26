@@ -57,7 +57,7 @@ async def main_async():
        app_name=APP_NAME, user_id=USER_ID, state=initial_state
    )
    session_id = new_session.id
-   print(f"Created session {session_id} (app={APP_NAME}, user={USER_ID})\n")
+#    print(f"Created session {session_id} (app={APP_NAME}, user={USER_ID})\n")
 
    # Build runner using the coordinator agent
    runner = Runner(agent=coordinator_agent, app_name=APP_NAME, session_service=session_service)
@@ -69,18 +69,18 @@ async def main_async():
    except FileNotFoundError:
        # Fallback to default query if file doesn't exist
        test_query = "Scan the recent user actions for HIPAA/FDA risks and report high-level results."
-       print(f"Warning: {INPUT_DATA_PATH} not found. Using default query.\n")
+       #print(f"Warning: {INPUT_DATA_PATH} not found. Using default query.\n")
    
    add_user_query_to_history(session_service, APP_NAME, USER_ID, session_id, test_query)
 
    # Call agent and print final response
    final = await call_agent_async(runner, USER_ID, session_id, test_query)
 
-   print("\n=== FINAL STRUCTURED RESPONSE ===")
-   if final:
-       print(final)
-   else:
-       print("No final response produced by the coordinator agent.")
+#    print("\n=== FINAL STRUCTURED RESPONSE ===")
+#    if final:
+#        print(final)
+#    else:
+#        print("No final response produced by the coordinator agent.")
 
    # Show final persisted state for inspection
    display_state(session_service, APP_NAME, USER_ID, session_id, label="Final State")
